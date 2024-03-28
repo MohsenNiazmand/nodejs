@@ -1,8 +1,11 @@
 import readline from 'readline/promises';
 import { stdin as input, stdout as output } from 'process';
 import fs from 'fs/promises'
-
-const CONTACTS_LIST_FILE_PATH = './data/contacts-list.json';
+import { 
+    CONTACTS_LIST_FILE_PATH,
+    loadContacts,
+     formatContactsList,
+     } from './services.js';
 
 const rl = readline.createInterface({ input, output });
 
@@ -10,16 +13,7 @@ const contactList = [];
 
 console.log('--- Contacts List ---');
 
-async function loadContacts() {
-    try {
-        const contactsListJSON = await fs.readFile(CONTACTS_LIST_FILE_PATH, 'utf-8');
-        contactList.push(
-            ...JSON.parse(contactsListJSON),
-        );
-    } catch (error) {
-        throw error;
-    }
-}
+
 async function saveContacts() {
     try {
         const contactsListJSON = JSON.stringify(contactList);
@@ -34,8 +28,8 @@ async function addNewContact() {
     const firstName = await rl.question('First Name : ');
     const lastName = await rl.question('Last Name : ');
 
-    const lastContact=contactList[contactList.length-1];
-    const id=lastContact?  lastContact.id+1 : 0;
+    const lastContact = contactList[contactList.length - 1];
+    const id = lastContact ? lastContact.id + 1 : 0;
 
     const newContact = {
         id,
@@ -49,13 +43,13 @@ async function addNewContact() {
 
 async function deleteContact() {
 
-    if(contactList.length<1){
+    if (contactList.length < 1) {
         console.error('There is No contact in list');
         return;
     }
     showContactsList();
 
-  const contactId=await  rl.question('Enter the ID of the contact you want to delete: ');
+    const contactId = await rl.question('Enter the ID of the contact you want to delete: ');
     try {
         // let contactList = await loadContacts();
         const index = contactList.findIndex(contact => contact.id === Number(contactId));
@@ -78,7 +72,7 @@ async function deleteContact() {
 
 
 function showContactsList() {
-    const formattedContactList = contactList.map(({ id, firstName, lastName }) => '# ' + id + ' ' + firstName + ' ' + lastName).join('\n');
+    const formattedContactList = formatContactsList(contactList);
 
     console.log('Contacts List: ');
     console.log(formattedContactList);
@@ -110,7 +104,10 @@ async function help() {
     help();
 }
 async function main() {
-    await loadContacts();
+    const loadedContacts = await loadContacts();
+    contactList.push(
+        ...loadedContacts,
+    );
     help();
 }
 
