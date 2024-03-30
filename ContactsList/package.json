@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/MohsenNiazmand/nodejs/issues"
   },
-  "homepage": "https://github.com/MohsenNiazmand/nodejs#readme"
+  "homepage": "https://github.com/MohsenNiazmand/nodejs#readme",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
 }
