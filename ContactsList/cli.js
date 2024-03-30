@@ -2,9 +2,10 @@ import readline from 'readline/promises';
 import { stdin as input, stdout as output } from 'process';
 import fs from 'fs/promises'
 import { 
-    CONTACTS_LIST_FILE_PATH,
+    saveContacts,
     loadContacts,
      formatContactsList,
+     generateNewContactId,
      } from './services.js';
 
 const rl = readline.createInterface({ input, output });
@@ -14,22 +15,14 @@ const contactList = [];
 console.log('--- Contacts List ---');
 
 
-async function saveContacts() {
-    try {
-        const contactsListJSON = JSON.stringify(contactList);
-        await fs.writeFile(CONTACTS_LIST_FILE_PATH, contactsListJSON);
-    } catch (error) {
-        throw error;
-    }
-}
 
 
-async function addNewContact() {
+
+async function createNewContact() {
     const firstName = await rl.question('First Name : ');
     const lastName = await rl.question('Last Name : ');
 
-    const lastContact = contactList[contactList.length - 1];
-    const id = lastContact ? lastContact.id + 1 : 0;
+   const id = generateNewContactId(contactList);
 
     const newContact = {
         id,
@@ -38,7 +31,7 @@ async function addNewContact() {
     };
 
     contactList.push(newContact);
-    saveContacts();
+    saveContacts(contactList);
 }
 
 async function deleteContact() {
@@ -57,7 +50,7 @@ async function deleteContact() {
         if (index !== -1) {
             contactList.splice(index, 1);
             // Save updated contact list to file
-            saveContacts();
+            saveContacts(contactList);
             console.log(`Contact with ID ${contactId} deleted successfully.`);
         } else {
             console.error(`Contact with ID ${contactId} not found.`);
@@ -89,7 +82,7 @@ async function help() {
     console.log('---------------');
     const action = await rl.question('Enter your action:');
     if (action == 'n') {
-        await addNewContact();
+        await createNewContact();
     } else if (action === 'l') {
         showContactsList();
 

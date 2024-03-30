@@ -1,7 +1,7 @@
 
 import express from 'express';
 import routes from './routes.js';
-
+import bodyParser from 'body-parser';
 const app = express();
 
 
@@ -13,6 +13,7 @@ function loggerMiddleware(req, res, next) {
 
 
 app.disable('etag');
+app.use(bodyParser.urlencoded({extended:false}));
 app.use(loggerMiddleware);
 app.use('/contacts', routes);
 
