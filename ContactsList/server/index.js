@@ -2,6 +2,9 @@
 import express from 'express';
 import routes from './routes.js';
 import bodyParser from 'body-parser';
+import { sequelize } from '../models/index.js';
+
+
 const app = express();
 
 
@@ -11,6 +14,13 @@ function loggerMiddleware(req, res, next) {
     next();
 }
 
+try{
+    await sequelize.sync({ force: false });
+    console.log("All models were synchronized successfully.");    
+}catch(error){
+    console.log('Error in syncing models : ',error);    
+
+}
 
 app.disable('etag');
 app.use(bodyParser.urlencoded({extended:false}));
