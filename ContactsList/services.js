@@ -25,7 +25,7 @@ export async function saveContacts(contactList) {
 
 
 export function formatContactsList(contactsList) {
-    return contactsList.map(({ id, first_name, last_name,is_favorite }) => `${is_favorite ? '*' : '#'}`+ id + ' ' + first_name + ' ' + last_name).join('\n');
+    return contactsList.map(({ id, firstName, lastName,isFavorite,mobilePhone }) => `${isFavorite ? '* ' : '# '}`+ id + ' ' + firstName + ' ' + lastName+ ' '+mobilePhone).join('\n');
 
 }
 
