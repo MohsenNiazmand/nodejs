@@ -15,6 +15,7 @@ export default function(sequelize){
         },
         isFavorite:{
             type:DataTypes.BOOLEAN,
+            defaultValue:false,
         },
         profilePicture:{
             type:DataTypes.BLOB,
