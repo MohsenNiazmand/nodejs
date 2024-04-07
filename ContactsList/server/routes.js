@@ -1,18 +1,20 @@
 import express from "express";
 import { formatContactsList, generateNewContactId, loadContacts, saveContacts } from '../services.js';
-
+import {query} from '../db.js';
 const contactList = [];
 
 const router = express.Router();
 
-router.get('/list', (req, res) => {
+router.get('/list',async (req, res) => {
+    const contactsListDB=await query('SELECT * FROM contacts');
+
     if (req.query.format) {
-        const responseData = `<pre>${formatContactsList(contactList)}</pre>`;
+        const responseData = `<pre>${formatContactsList(contactsListDB.rows)}</pre>`;
         res.type('html');
         res.send(responseData);
         return;
     }
-    res.json(contactList);
+    res.json(contactsListDB.rows);
 
 });
 
