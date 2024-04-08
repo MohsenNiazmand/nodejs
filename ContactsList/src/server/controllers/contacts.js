@@ -1,5 +1,9 @@
+import multer from 'multer';
 import { Contact } from '../../models/index.js';
 import { formatContactsList } from '../../utils.js';
+
+
+const upload = multer({storage : multer.memoryStorage()});
 
 export async function getContacts(req, res) {
     try {
@@ -13,7 +17,13 @@ export async function getContacts(req, res) {
             return;
         }
 
-        res.json(contacts);
+        const nomalizedContacts=contacts.map(({dataValues:{id,profilePicture, ... rest}})=>({
+            id,
+            profilePicture:profilePicture ?`/images/profile-picture/${id}` : null,
+            ...rest
+        }));;
+
+        res.json(nomalizedContacts);
     } catch(error) {
         res.status(500).send({
             message: 'Something went wrong',
@@ -22,8 +32,29 @@ export async function getContacts(req, res) {
     }
 }
 
-export async function createContact(req, res) {
+
+export async function getContactProfilePicture(req,res){
+    try{
+        const {profilePicture} = await Contact.findOne({
+            attributes:['profilePicture'],
+            where : {id:req.params.id},
+        
+        });
+        res.type('image/jpeg');
+        res.send(profilePicture);
+    }catch(error){
+        res.status(500).send({
+            message:'Something went wrong',
+            error,
+        });
+    }
+}
+
+
+export async function createContactCtl(req, res) {
     const { firstName, lastName, mobilePhone, isFavorite } = req.body;
+
+    const {buffer:profilePicture} = req.file || {};
 
     try {
         const { id } = await Contact.create({
@@ -31,6 +62,7 @@ export async function createContact(req, res) {
             lastName,
             mobilePhone,
             isFavorite,
+            profilePicture,
         });
 
         res.send(`The contact "#${id} ${firstName} ${lastName}" has been created!`);
@@ -41,6 +73,13 @@ export async function createContact(req, res) {
         });
     }
 }
+
+
+export const createContact=[
+    upload.single('profilePicture'),
+    createContactCtl,
+
+];
 
 export async function deleteContact(req, res) {
     try {
