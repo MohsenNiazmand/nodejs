@@ -5,18 +5,41 @@ import { formatContactsList } from '../../utils.js';
 
 const upload = multer({storage : multer.memoryStorage()});
 
-export async function getContacts(req, res) {
-    try {
-        const contacts = await Contact.findAll();
+async function loadContacts(req,res,next){
 
-        if (req.query.format) {
-            const responseData = `<pre>${formatContactsList(contacts)}</pre>`;
+    try{
+        const {
+            sort,
+            desc,
+        } = req.query;
 
-            res.type('html');
-            res.send(responseData);
-            return;
+        const order=[];
+
+        if(sort){
+            order.push(
+                [sort,desc === 'true' ? 'DESC' : 'ASC'],
+            );
         }
 
+
+        const contacts = await Contact.findAll({
+            order,
+        });
+        req.locals={
+            contacts,
+        }
+        next();
+    }catch(error){
+        res.status(500).send({
+            message: 'Something went wrong',
+            error,
+        });
+    }
+
+}
+
+export async function getContactsJSON(req, res) {
+        const {contacts}=req.locals;
         const nomalizedContacts=contacts.map(({dataValues:{id,profilePicture, ... rest}})=>({
             id,
             profilePicture:profilePicture ?`/images/profile-picture/${id}` : null,
@@ -24,13 +47,28 @@ export async function getContacts(req, res) {
         }));;
 
         res.json(nomalizedContacts);
-    } catch(error) {
-        res.status(500).send({
-            message: 'Something went wrong',
-            error,
-        });
-    }
+   
 }
+
+async function getContactsFormatted(req,res,next){
+    if(req.query.format!=='true'){
+        return next();
+    }
+        const {contacts} = req.locals;
+
+            const responseData = `<pre>${formatContactsList(contacts)}</pre>`;
+
+            res.type('html');
+            res.send(responseData);
+  
+}
+
+
+export const getContacts=[
+    loadContacts,
+    getContactsFormatted,
+    getContactsJSON
+];
 
 
 export async function getContactProfilePicture(req,res){
