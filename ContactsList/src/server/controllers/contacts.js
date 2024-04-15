@@ -1,35 +1,50 @@
 import multer from 'multer';
 import { Contact } from '../../models/index.js';
 import { formatContactsList } from '../../utils.js';
+import { Sequelize } from 'sequelize';
 
 
-const upload = multer({storage : multer.memoryStorage()});
+const upload = multer({ storage: multer.memoryStorage() });
 
-async function loadContacts(req,res,next){
+async function loadContacts(req, res, next) {
 
-    try{
+    try {
         const {
             sort,
             desc,
+            q,
         } = req.query;
 
-        const order=[];
+        const where = {};
+        const order = [];
 
-        if(sort){
+        if (q) {
+
+            where[Sequelize.Op.or] = [
+
+                { firstName: { [Sequelize.Op.like]: `%${q}%`, } },
+                { lastName: { [Sequelize.Op.like]: `%${q}%`, } },
+                { mobilePhone: { [Sequelize.Op.like]: `%${q}%`, } },
+
+            ];
+        }
+
+        if (sort) {
             order.push(
-                [sort,desc === 'true' ? 'DESC' : 'ASC'],
+                [sort, desc === 'true' ? 'DESC' : 'ASC'],
             );
         }
 
 
         const contacts = await Contact.findAll({
+            where,
             order,
         });
-        req.locals={
+        req.locals = {
             contacts,
         }
         next();
-    }catch(error){
+    } catch (error) {
         res.status(500).send({
             message: 'Something went wrong',
             error,
@@ -38,51 +53,51 @@ async function loadContacts(req,res,next){
 
 }
 
-export async function getContactsJSON(req, res) {
-        const {contacts}=req.locals;
-        const nomalizedContacts=contacts.map(({dataValues:{id,profilePicture, ... rest}})=>({
-            id,
-            profilePicture:profilePicture ?`/images/profile-picture/${id}` : null,
-            ...rest
-        }));;
+function getContactsJSON(req, res) {
+    const { contacts } = req.locals;
+    const nomalizedContacts = contacts.map(({ dataValues: { id, profilePicture, ...rest } }) => ({
+        id,
+        profilePicture: profilePicture ? `/images/profile-picture/${id}` : null,
+        ...rest
+    }));;
 
-        res.json(nomalizedContacts);
-   
+    res.json(nomalizedContacts);
+
 }
 
-async function getContactsFormatted(req,res,next){
-    if(req.query.format!=='true'){
+function getContactsFormatted(req, res, next) {
+    if (req.query.format !== 'true') {
         return next();
     }
-        const {contacts} = req.locals;
+    const { contacts } = req.locals;
 
-            const responseData = `<pre>${formatContactsList(contacts)}</pre>`;
+    const responseData = `<pre>${formatContactsList(contacts)}</pre>`;
 
-            res.type('html');
-            res.send(responseData);
-  
+    res.type('html');
+    res.send(responseData);
+
 }
 
 
-export const getContacts=[
+export const getContacts = [
     loadContacts,
     getContactsFormatted,
     getContactsJSON
 ];
 
 
-export async function getContactProfilePicture(req,res){
-    try{
-        const {profilePicture} = await Contact.findOne({
-            attributes:['profilePicture'],
-            where : {id:req.params.id},
-        
+export async function getContactProfilePicture(req, res) {
+    try {
+        const { profilePicture } = await Contact.findOne({
+            attributes: ['profilePicture'],
+            where: { id: req.params.id },
+
         });
         res.type('image/jpeg');
         res.send(profilePicture);
-    }catch(error){
+    } catch (error) {
         res.status(500).send({
-            message:'Something went wrong',
+            message: 'Something went wrong',
             error,
         });
     }
@@ -92,7 +107,7 @@ export async function getContactProfilePicture(req,res){
 export async function createContactCtl(req, res) {
     const { firstName, lastName, mobilePhone, isFavorite } = req.body;
 
-    const {buffer:profilePicture} = req.file || {};
+    const { buffer: profilePicture } = req.file || {};
 
     try {
         const { id } = await Contact.create({
@@ -104,7 +119,7 @@ export async function createContactCtl(req, res) {
         });
 
         res.send(`The contact "#${id} ${firstName} ${lastName}" has been created!`);
-    } catch(error) {
+    } catch (error) {
         res.status(400).send({
             message: 'Something went wrong',
             error,
@@ -113,7 +128,7 @@ export async function createContactCtl(req, res) {
 }
 
 
-export const createContact=[
+export const createContact = [
     upload.single('profilePicture'),
     createContactCtl,
 
@@ -126,7 +141,7 @@ export async function deleteContact(req, res) {
         });
 
         res.send(`Contact #${req.params.id} has been deleted!`);
-    } catch(error) {
+    } catch (error) {
         res.status(400).send({
             message: 'Something went wrong',
             error,
@@ -148,7 +163,7 @@ export async function updateContact(req, res) {
         });
 
         res.send(`Contact #${req.params.id} has been modified!`);
-    } catch(error) {
+    } catch (error) {
         res.status(400).send({
             message: 'Something went wrong',
             error,
