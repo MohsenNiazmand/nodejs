@@ -28,7 +28,7 @@ function generateToken({ id, username }){
             id, username
         }
     };
-    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: 30 });
+    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: 30 *60 * 60 * 24 });
 }
 
 function returnCreatedUser(req, res) {

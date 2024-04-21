@@ -1,6 +1,7 @@
 import passport from 'passport';
 import LocalStrategy from 'passport-local';
 import { createUser, getUser } from './controllers/users.js';
+import passportJWT from 'passport-jwt';
 
 passport.use('signup', new LocalStrategy({
     passReqToCallback: true,
@@ -39,4 +40,17 @@ passport.use('login',new LocalStrategy(async (username,password,done)=> {
     }catch(error){
         done(error);
     }
+}));
+
+
+passport.use(new passportJWT.Strategy({
+    secretOrKey : process.env.JWT_SECRET,
+    jwtFromRequest:passportJWT.ExtractJwt.fromAuthHeaderAsBearerToken(),
+},(tokenPayload,done)=>{
+    try{
+        done(null,tokenPayload.user);
+    }catch(error){
+        done(error);
+    }
+
 }));
