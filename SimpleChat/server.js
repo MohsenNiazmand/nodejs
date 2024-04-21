@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
-import { EVENT_INFO, EVENT_MESSAGE } from "./constants.js";
+import { CHANNEL_PUBLIC, EVENT_INFO, EVENT_MESSAGE } from "./constants.js";
 
 
 const io = new Server(3000);
@@ -11,10 +11,13 @@ io.on('connection',(socket)=>{
 
     socket.emit(EVENT_INFO,'Welcome to SimpleChat');
 
+    socket.join(CHANNEL_PUBLIC);
+
 
     socket.on(EVENT_MESSAGE,({sender,message})=>{
-        socket.emit(EVENT_MESSAGE,{sender,message});
-
+        // socket.emit(EVENT_MESSAGE,{sender,message});
+        console.log(`[${sender}]: ${message}`);
+            io.to(CHANNEL_PUBLIC).emit(EVENT_MESSAGE,{sender,message});
     });
 });
 
