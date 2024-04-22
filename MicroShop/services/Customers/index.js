@@ -14,6 +14,12 @@ app.get('/customers', async (req, res) => {
     res.json(customers);
 });
 
+app.get('/customer/:id', async (req, res) => {
+    const [customer] = await sql`SELECT * FROM customers WHERE id = ${req.params.id}`;
+
+    res.json(customer);
+});
+
 app.post('/customer', async (req, res) => {
     const { fullname, address } = req.body;
 
@@ -21,6 +27,7 @@ app.post('/customer', async (req, res) => {
 
     res.json(customer);
 });
+
 
 app.delete('/customer/:id', async (req, res) => {
     await sql`DELETE FROM customers WHERE id = ${req.params.id}`;
