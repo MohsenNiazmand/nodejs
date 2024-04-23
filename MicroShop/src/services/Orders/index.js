@@ -55,11 +55,14 @@ app.post('/orders', async (req, res) => {
         });
 
         const [order] = await sql`INSERT INTO orders
-            (customer_id, product_id, payment_id, status) VALUES
-            (${customer.id}, ${orderedProduct.id}, ${payment.id}, ${STATUS.PENDING}) RETURNING *`;
+        (customer_id, product_id, payment_id, status) VALUES
+        (${customer.id}, ${orderedProduct.id}, ${payment.getId()}, ${STATUS.PENDING}) RETURNING *`;
+            console.log(`order :  ${order}`);
 
         res.json(order);
     } catch (error) {
+        console.log(`Error :  ${error}`);
+
         res.status(500).send(error);
     }
 });
