@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import 'dotenv/config';
 import sql from './db.js';
 import { createPayment } from './GRPCCalls.js';
+import amqp from 'amqplib';
 
 const STATUS = {
     PENDING: 0,
@@ -14,6 +15,18 @@ const STATUS = {
 
 const CatalogsService = process.env.CATALOGS_SERVICE;
 const CustomerService = process.env.CUSTOMER_SERVICE;
+
+const connection = await amqp.connect(process.env.AMQP_SERVER);
+const channel = await connection.createChannel();
+channel.assertQueue(process.env.ORDERS_QUEUE);
+
+function publishToQueue(order) {
+    const message = Buffer.from(
+        JSON.stringify(order)
+    );
+
+    channel.sendToQueue(process.env.ORDERS_QUEUE, message);
+}
 
 await sql`CREATE TABLE IF NOT EXISTS orders (id SERIAL, customer_id INTEGER, product_id INTEGER, payment_id INTEGER, status INTEGER)`;
 
@@ -60,6 +73,7 @@ app.post('/orders', async (req, res) => {
             console.log(`order :  ${order}`);
 
         res.json(order);
+        publishToQueue(order);
     } catch (error) {
         console.log(`Error :  ${error}`);
 
